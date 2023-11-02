@@ -1,9 +1,63 @@
 \section{Introduction}
 \label{sec:intro}
-hello
-Please follow the steps outlined below when submitting your manuscript to the IEEE Computer Society Press.
-This style guide now has several important modifications (for example, you are no longer warned against the use of sticky tape to attach your artwork to the paper), so all authors should read this new version.
 
+As deep learning models continue to permeate various fields, the attention towards adversarial attacks and defenses has significantly grown among researchers and practitioners. 
+Among numerous certified robustness methods, randomized smoothing has gradually emerged as a mainstream approach.
+Randomized smoothing trains models on random Gaussian noise and utilizes a smoothed classifier to obtain a certified radius. Within this radius, robustness is guaranteed.
+Many works have elegantly extended and innovatively refined randomized smoothing, culminating in a steady stream of enhanced outcomes.
+\cite{Alpher02}
+
+
+However, existing randomized smoothing methods entail considerable computational expenses.
+Typical randomized smoothing algorithms require the infusion of abundant random Gaussian noise into each clean image during training.
+In case of multiple datasets, these training efforts must be repeated for each dataset, thus inflating the training expenses considerably.
+Moreover,  a model trained under a specific intensity of Gaussian noise can only resist noise of the similar intensity during inference, proving to be ineffective against noise of dissimilar intensities.
+Present methods manage different noise levels by training multiple models under different noise intensities, thereby further escalating the training costs.
+
+
+To mitigate computational costs, a natural approach would be to incorporate transferability into the robust model. 
+This approach should facilitate the efficient adaptation of a robust model, pretrained on a relatively extensive dataset, to various downstream datasets.
+Thus,  dealing with noisy images on each downstream dataset demands only a minimal amount of transfer costs.
+Furthermore, if a model is capable of managing various intensities of noise, we can notably reduce the costs of both pretraining and fine-tuning.
+Advancing further, it is critical to reduce the complexity and the training overhead during fine-tuning.
+The most favorable situation would be to handle different noises by merely fine-tuning on clean images.
+
+
+In this paper, we designed a simple yet highly efficient transfer approach for randomized smoothing.
+Our robust model is capable of transferring to multiple downstream datasets, handling various noise intensities, and only requires minimal fine-tuning on clean images (with as few as one epoch) .
+Specifically, during the pretraining process, we mix clean images with noisy images infused with different levels of noise . 
+This process empowers a model to deal with noise of diverse intensities simultaneously.
+Next, we conduct fine-tuning using purely clean images on multiple downstream datasets.
+The success of the transfer hinges on two pivotal aspects. 
+The first is the mixture of clean and various noisy images during the pretraining phase.
+The second is the statistical information in the model's normalization layer.
+
+
+The mixture of clean and various noisy images offers three distinct advantages.
+Firstly, the interaction between clean and various noisy images can stimulate each other, functioning as a data augmentation technique.
+Secondly, incorporating clean images into the training enables the model to learn strong semantic representations.
+The model can achieve high accuracy on clean images in both the upstream and downstream stages, eliminating the need to make a trade-off between robustness and accuracy.
+Thirdly, by encompassing a broader data distribution, the model's data distribution aligns more closely with the downstream clean image distribution. 
+This makes the adaptation during fine-tuning remarkably easy. 
+Even with just one epoch of fine-tuning on downstream clean images, the model can achieve excellent accuracy and robustness.
+
+
+Under the situation of mixed noise, the normalization layer of the model plays a decisive role in the success of  transfer, but it is often overlooked.
+Current work on randomized smoothing heavily uses ResNet, where the Batch Norm by default computes the training set's running mean and variance, which are then applied to the validation set and the downstream dataset.
+We conducted extensive ablation studies with various normalization layers, discovering that these statistics severely hamper robust transfer capabilities when noise is mixed.
+Our analysis indicates that the mixing of multiple noises increases the disparity in the noisy data distribution.
+Therefore, it's crucial not to use these statistics when mixing noise.
+
+
+We conducted mixed noise pretraining on ImageNet and then fine-tuned on clean images across twelve downstream datasets. With minimal fine-tuning cost, we obtained impressive results on all these datasets.
+
+
+
+\newpage
+\null
+\newpage
+\null
+\newpage
 %-------------------------------------------------------------------------
 \subsection{Language}
 
