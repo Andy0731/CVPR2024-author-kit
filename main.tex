@@ -7,6 +7,12 @@
 \usepackage[review]{cvpr}      % To produce the REVIEW version
 % \usepackage[pagenumbers]{cvpr} % To force page numbers, e.g. for an arXiv version
 
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage{graphicx}
+% \graphicspath{ {./fig/} }
+
 % Import additional packages in the preamble file, before hyperref
 \input{preamble}
 
@@ -20,13 +26,19 @@
 \definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
 \usepackage[pagebackref,breaklinks,colorlinks,citecolor=cvprblue]{hyperref}
 
+
+\newcommand*{\huzhang}[1]{\textcolor{orange}{[huzhang: #1]}}
+\newcommand*{\zhirong}[1]{\textcolor{green}{[zhirong: #1]}}
+\newcommand*{\kai}[1]{\textcolor{blue}{[kai: #1]}}
+
+
 %%%%%%%%% PAPER ID  - PLEASE UPDATE
-\def\paperID{*****} % *** Enter the Paper ID here
+\def\paperID{6498} % *** Enter the Paper ID here
 \def\confName{CVPR}
 \def\confYear{2024}
 
 %%%%%%%%% TITLE - PLEASE UPDATE
-\title{13234Exploring the Transferability of Randomized Smoothing}
+\title{Exploring the Transferability of Randomized Smoothing}
 
 %%%%%%%%% AUTHORS - PLEASE UPDATE
 \author{First Author\\
@@ -51,6 +63,20 @@ First line of institution2 address\\
 \input{sec/1_intro}
 \input{sec/2_formatting}
 \input{sec/3_finalcopy}
+
+\newpage
+\null
+\newpage
+\null
+\newpage
+\null
+\newpage
+\null
+\newpage
+\null
+\newpage
+\null
+
 {
     \small
     \bibliographystyle{ieeenat_fullname}

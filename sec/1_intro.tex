@@ -1,11 +1,85 @@
 \section{Introduction}
 \label{sec:intro}
 
+V2
+
+The art of refining pre-trained foundation models with large datasets for task-specific applications has become the leading strategy in the AI landscape. 
+These foundation models acquire rich representations from a broad data distribution during the pre-training phase.
+Consequently, a slight fine-tuning is sufficient for these foundation models to competently adapt to various downstream tasks.
+This paradigm has become prevalent in various domains, including but not limited to, natural language processing, computer vision, speech, and multimedia.
+% Products of this paradigm such as GPT, LLama, Stable Diffusion, ControlNet, among others, have generated profound societal effects.
+
+
+However, despite the appeal of these models, their inherent lack of robustness presents significant security threats.
+Recent studies have shown that these models are vulnerable to adversarial attacks, which can be easily crafted by adding imperceptible perturbations to the input.
+% These perturbations are often imperceptible to humans, but they can cause the model to make incorrect predictions.
+This vulnerability has raised serious concerns about the safety of these models in real-world applications.
+To address this issue, researchers have proposed numerous certified robustness methods, including randomized smoothing, interval bound propagation, and others.
+Among these methods, randomized smoothing has gradually emerged as a mainstream approach.
+Randomized smoothing trains models on random Gaussian noise and utilizes a smoothed classifier to obtain a certified radius. Within this radius, robustness is guaranteed.
+Many works have elegantly extended and innovatively refined randomized smoothing, culminating in a steady stream of enhanced outcomes.
+
+
+In this paper, our goal is to learn a certifiably robust model that can be readily finetuned for adaptation to a particular task.
+A key challenge is dealing with the compromise between semantic learning and robustness.
+Our findings suggest that expanding the data distribution at the pre-training stage is highly significant.
+A broad data distribution enables the model to learn both rich semantic features and robustness simultaneously.
+This makes it unnecessary to make trade-offs between semantic learning and robustness.
+Such a model merely requires minor adjustments to adapt to downstream tasks.
+To expand the data distribution, we present a simple, yet incredibly powerful strategy.
+In particular, we pre-train on a mixture of clean and various noisy images.
+
+
+Surprisingly, we found that such a mixed pre-training model, even when only fine-tuned on the clean images of downstream tasks, can achieve a strong level of certified robustness.
+This indicates that the model has successfully transferred not only the semantic features but also robustness to the downstream tasks.
+This allows for a fine-tuning process that is remarkably straightforward and efficient.
+% As illustrated in Table 1, the distribution gap between the upstream and downstream datasets has a significant impact on transferability.
+Existing works on randomized smoothing often sacrifice natural accuracy in order to achieve robust accuracy.
+By contrast, we do not need to compromise on clean accuracy.
+Our method is capable of achieving both high clean accuracy and robust accuracy simultaneously.
+
+
+Another advantage of our strategy is that it only requires training one model to handle various noises, instead of training multiple models.
+Existing research on randomized smoothing involves training a separate model for each specific noise.
+Such trained models can only handle specific noise and struggle when faced with noise of different magnitudes.
+Also, training multiple models complicates the model's deployment process.
+In contrast, our approach needs only one model to deal with multiple types of noise. This simplifies the application of the model and drastically cuts computational costs, especially in the context of transfer learning across multiple downstream tasks.
+
+
+The pre-training of our model facilitates its easy adaptation to multiple downstream tasks.
+Compared to existing work, we achieve similar or even superior results with just one model, as opposed to their method of using several models.
+Additionally, we performed extensive experiments to investigate the correlation between semantic learning and robustness during the model's transfer process.
+We hope that these analyses could stimulate more exploration of robustness within the community.
+
+
+
+
+
+\iffalse
+
+
+
+V1
+
 As deep learning models continue to permeate various fields, the attention towards adversarial attacks and defenses has significantly grown among researchers and practitioners. 
 Among numerous certified robustness methods, randomized smoothing has gradually emerged as a mainstream approach.
 Randomized smoothing trains models on random Gaussian noise and utilizes a smoothed classifier to obtain a certified radius. Within this radius, robustness is guaranteed.
 Many works have elegantly extended and innovatively refined randomized smoothing, culminating in a steady stream of enhanced outcomes.
-\cite{Alpher02}
+
+\begin{table}[t]
+  \label{tab:sum}
+  \centering
+  \caption{Transferability of semantic and robustness.}
+  \begin{tabular}{llll}
+  \hline
+  pretrain    & finetune   & Clean Acc. & $\mathcal{N}$ 0.25 Acc. \\ \hline
+  Clean       & Clean      &            &                 \\
+  Clean       & $\mathcal{N}$ 0.25 &            &                 \\
+  $\mathcal{N}$ 0.25  & Clean      &            &                 \\
+  $\mathcal{N}$ 0.25  & $\mathcal{N}$ 0.25 &            &                 \\
+  Mixed Noise & Clean      &            &                 \\ \hline
+  \end{tabular}
+\end{table}
 
 
 However, existing randomized smoothing methods entail considerable computational expenses.
@@ -51,206 +125,327 @@ Therefore, it's crucial not to use these statistics when mixing noise.
 
 We conducted mixed noise pretraining on ImageNet and then fine-tuned on clean images across twelve downstream datasets. With minimal fine-tuning cost, we obtained impressive results on all these datasets.
 
+\fi
+
+
+\begin{figure*}  
+  \centering  
+  % \includegraphics[width=0.5\textwidth]{sec/fig/CIFAR10_curve.pdf}  
+    \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}} 
+  \caption{The transferability of semantic and robustness.}  
+  \label{fig:transfer}  
+\end{figure*}  
+
+
 
 
 \newpage
 \null
+
+\section{Related Work}
+\label{sec:related_work}
+
+\subsection{Randomized Smoothing}
+
+\subsection{Robustness Transfer}
+
+
 \newpage
-\null
+
+
+
+
+\section{Method}
+\label{sec:method}
+Achieving certified robustness often comes at a high computational cost and at the expense of natural accuracy. We propose a robust transfer framework to address this issue.
+Our process begins with pre-training on a relatively large dataset, incorporating various types of noise. This is followed by fine-tuning on clean images from the downstream task. This method ensures that semantic representations are transferred while retaining the model's robustness.
+Our framework is not only simple but also highly efficient. Fine-tuning solely on clean images significantly reduces the computational cost and achieves high natural accuracy.
+
+
+\subsection{Pipeline}
+Our pipeline consists of two stages. In the pre-training stage, we allow the model to simultaneously learn semantic representation and robustness. Following this, in the fine-tuning stage, we ensure the model retains its robustness while performing semantic adaptation.
+
+\textbf{Pretraining.}
+In order to transfer both semantic representation and robustness to downstream datasets, it's necessary to enable the model to learn both elements during the pre-training stage. A natural idea is to blend various types of noise into the training process, using labels for supervision.
+Given a set of noise S={0, n1, n2, … ni, …}, we uniformly select noise from this set at random. This noise is then added to a clean image, which is fed into the model for training. Since clean images (i.e., n = 0) occur randomly during the training process, the model is effectively able to learn the semantic representation.
+Incorporating noisy images into the training set forces the model's decision boundary to include both clean and noisy representations of the same category. This enables the model to learn robustness.
+
+\textbf{Fine-tuning.}
+During fine-tuning on downstream datasets, we only use clean images and their labels from these datasets. This approach allows the model to quickly transfer the semantic representations learned during the pre-training phase to the downstream dataset. It also achieves excellent natural accuracy on the downstream dataset without compromising between semantic representation and robustness. Additionally, fine-tuning solely on clean images significantly reduces computational costs. We found that even just one epoch of fine-tuning can yield excellent clean accuracy and certified robustness on the downstream dataset.
+
+\subsection{Manifold Gap}
+To ensure robustness while transferring semantics, it is crucial to minimize the manifold gap between the pre-training dataset and fine-tuning dataset.
+If the manifold gap between the pre-training and fine-tuning datasets is small, the model only needs to make minor adjustments on the manifold to adapt to the new dataset. Thus, both semantic representation and robustness can be transferred simultaneously.
+However, if the manifold gap between the pre-training and fine-tuning datasets is large, the model will need to make a substantial shift on the manifold to adapt to the new dataset. This forces the model to make trade-offs between semantic representation and robustness.
+We found that the set of noise used in pre-training and fine-tuning determines the manifold gap. If the sets of noise used in both the pre-training and fine-tuning stages overlap, the manifold gap is small. However, if there is no overlap in the sets of noise used in these two stages, the manifold gap becomes large.
+To minimize the manifold gap between the pre-training and fine-tuning stages, we use a blend of multiple types of noise, i.e., S={0, n1, n2, … ni, …}, during the pre-training stage, while only using clean images, i.e., S={0}, during the fine-tuning stage. This approach allows for the simultaneous transfer of semantics and robustness. Moreover, the use of only clean images makes fine-tuning highly efficient and straightforward.
+
+\subsection{Statistics Adaptation}
+
+We discovered in our experiments that the statistics within the model play a crucial role in the transfer of semantics and robustness. Some normalization layers (e.g., Batch Norm) default to using the mean and variance statistically derived from one dataset for another dataset. We found that these statistics can significantly disrupt the transfer process.
+
+In the pre-training stage, we mixed multiple types of noise, while in the fine-tuning stage, we only used clean images. The statistics (i.e., mean and variance) calculated by the normalization layer in these two stages differ significantly. If the statistics from the pre-training stage are used in the fine-tuning stage, it will cause confusion in the fine-tuning stage, thereby affecting the transfer of semantics and robustness.
+
+We conducted extensive ablation studies on the statistics to elaborate further. To ensure the transfer of semantics and robustness, we used Layer Normalization and did not use statistics. Layer Normalization normalizes the inputs across the features instead of normalizing the inputs across batches like Batch Normalization. By eliminating the reliance on pre-computed statistics, it effectively reduces the manifold gap and thus facilitates the transfer of both semantics and robustness.
+
+
 \newpage
-%-------------------------------------------------------------------------
-\subsection{Language}
-
-All manuscripts must be in English.
-
-\subsection{Dual submission}
-
-Please refer to the author guidelines on the \confName\ \confYear\ web page for a
-discussion of the policy on dual submissions.
-
-\subsection{Paper length}
-Papers, excluding the references section, must be no longer than eight pages in length.
-The references section will not be included in the page count, and there is no limit on the length of the references section.
-For example, a paper of eight pages with two pages of references would have a total length of 10 pages.
-{\bf There will be no extra page charges for \confName\ \confYear.}
-
-Overlength papers will simply not be reviewed.
-This includes papers where the margins and formatting are deemed to have been significantly altered from those laid down by this style guide.
-Note that this \LaTeX\ guide already sets figure captions and references in a smaller font.
-The reason such papers will not be reviewed is that there is no provision for supervised revisions of manuscripts.
-The reviewing process cannot determine the suitability of the paper for presentation in eight pages if it is reviewed in eleven.
-
-%-------------------------------------------------------------------------
-\subsection{The ruler}
-The \LaTeX\ style defines a printed ruler which should be present in the version submitted for review.
-The ruler is provided in order that reviewers may comment on particular lines in the paper without circumlocution.
-If you are preparing a document using a non-\LaTeX\ document preparation system, please arrange for an equivalent ruler to appear on the final output pages.
-The presence or absence of the ruler should not change the appearance of any other content on the page.
-The camera-ready copy should not contain a ruler.
-(\LaTeX\ users may use options of \texttt{cvpr.sty} to switch between different versions.)
-
-Reviewers:
-note that the ruler measurements do not align well with lines in the paper --- this turns out to be very difficult to do well when the paper contains many figures and equations, and, when done, looks ugly.
-Just use fractional references (\eg, this line is $087.5$), although in most cases one would expect that the approximate location will be adequate.
 
 
-\subsection{Paper ID}
-Make sure that the Paper ID from the submission system is visible in the version submitted for review (replacing the ``*****'' you see in this document).
-If you are using the \LaTeX\ template, \textbf{make sure to update paper ID in the appropriate place in the tex file}.
+\section{Experiments}
+\label{sec:experiments}
 
 
-\subsection{Mathematics}
+\subsection{Settings}
 
-Please number all of your sections and displayed equations as in these examples:
-\begin{equation}
-  E = m\cdot c^2
-  \label{eq:important}
-\end{equation}
-and
-\begin{equation}
-  v = a\cdot t.
-  \label{eq:also-important}
-\end{equation}
-It is important for readers to be able to refer to any particular equation.
-Just because you did not refer to it in the text does not mean some future reader might not need to refer to it.
-It is cumbersome to have to use circumlocutions like ``the equation second from the top of page 3 column 1''.
-(Note that the ruler will not be present in the final copy, so is not an alternative to equation numbers).
-All authors will benefit from reading Mermin's description of how to write mathematics:
-\url{http://www.pamitc.org/documents/mermin.pdf}.
+\textbf{Datasets.}
 
-\subsection{Blind review}
+\textbf{Models.}
 
-Many authors misunderstand the concept of anonymizing for blind review.
-Blind review does not mean that one must remove citations to one's own work---in fact it is often impossible to review a paper unless the previous citations are known and available.
+\textbf{Metrics.}
 
-Blind review means that you do not use the words ``my'' or ``our'' when citing previous work.
-That is all.
-(But see below for tech reports.)
-
-Saying ``this builds on the work of Lucy Smith [1]'' does not say that you are Lucy Smith;
-it says that you are building on her work.
-If you are Smith and Jones, do not say ``as we show in [7]'', say ``as Smith and Jones show in [7]'' and at the end of the paper, include reference 7 as you would any other cited work.
-
-An example of a bad paper just asking to be rejected:
-\begin{quote}
-\begin{center}
-    An analysis of the frobnicatable foo filter.
-\end{center}
-
-   In this paper we present a performance analysis of our previous paper [1], and show it to be inferior to all previously known methods.
-   Why the previous paper was accepted without this analysis is beyond me.
-
-   [1] Removed for blind review
-\end{quote}
+\textbf{Implementation Details.}
 
 
-An example of an acceptable paper:
-\begin{quote}
-\begin{center}
-     An analysis of the frobnicatable foo filter.
-\end{center}
+\subsection{Ablation Study}
 
-   In this paper we present a performance analysis of the  paper of Smith \etal [1], and show it to be inferior to all previously known methods.
-   Why the previous paper was accepted without this analysis is beyond me.
+\textbf{Mixed Noise.}
 
-   [1] Smith, L and Jones, C. ``The frobnicatable foo filter, a fundamental contribution to human knowledge''. Nature 381(12), 1-213.
-\end{quote}
+\textbf{Statistics Adaptation.}
 
-If you are making a submission to another conference at the same time, which covers similar or overlapping material, you may need to refer to that submission in order to explain the differences, just as you would if you had previously published related work.
-In such cases, include the anonymized parallel submission~\cite{Authors14} as supplemental material and cite it as
-\begin{quote}
-[1] Authors. ``The frobnicatable foo filter'', F\&G 2014 Submission ID 324, Supplied as supplemental material {\tt fg324.pdf}.
-\end{quote}
 
-Finally, you may feel you need to tell the reader that more details can be found elsewhere, and refer them to a technical report.
-For conference submissions, the paper must stand on its own, and not {\em require} the reviewer to go to a tech report for further details.
-Thus, you may say in the body of the paper ``further details may be found in~\cite{Authors14b}''.
-Then submit the tech report as supplemental material.
-Again, you may not assume the reviewers will read this material.
+\subsection{Comparison with State-of-the-art Methods}
 
-Sometimes your paper is about a problem which you tested using a tool that is widely known to be restricted to a single institution.
-For example, let's say it's 1969, you have solved a key problem on the Apollo lander, and you believe that the 1970 audience would like to hear about your
-solution.
-The work is a development of your celebrated 1968 paper entitled ``Zero-g frobnication: How being the only people in the world with access to the Apollo lander source code makes us a wow at parties'', by Zeus \etal.
+\textbf{CIFAR10.}
 
-You can handle this paper like any other.
-Do not write ``We show how to improve our previous work [Anonymous, 1968].
-This time we tested the algorithm on a lunar lander [name of lander removed for blind review]''.
-That would be silly, and would immediately identify the authors.
-Instead write the following:
-\begin{quotation}
-\noindent
-   We describe a system for zero-g frobnication.
-   This system is new because it handles the following cases:
-   A, B.  Previous systems [Zeus et al. 1968] did not  handle case B properly.
-   Ours handles it by including a foo term in the bar integral.
 
-   ...
+\subsection{Downstream Tasks}
 
-   The proposed system was integrated with the Apollo lunar lander, and went all the way to the moon, don't you know.
-   It displayed the following behaviours, which show how well we solved cases A and B: ...
-\end{quotation}
-As you can see, the above text follows standard scientific convention, reads better than the first version, and does not explicitly name you as the authors.
-A reviewer might think it likely that the new paper was written by Zeus \etal, but cannot make any decision based on that guess.
-He or she would have to be sure that no other authors could have been contracted to solve problem B.
-\medskip
+\textbf{CIFAR100.}
 
-\noindent
-FAQ\medskip\\
-{\bf Q:} Are acknowledgements OK?\\
-{\bf A:} No.  Leave them for the final copy.\medskip\\
-{\bf Q:} How do I cite my results reported in open challenges?
-{\bf A:} To conform with the double-blind review policy, you can report results of other challenge participants together with your results in your paper.
-For your results, however, you should not identify yourself and should not mention your participation in the challenge.
-Instead present your results referring to the method proposed in your paper and draw conclusions based on the experimental comparison to other results.\medskip\\
+\textbf{Other Datasets.}
 
-\begin{figure}[t]
+
+
+
+\begin{table*}[t]
+  \label{tab:comparison}
   \centering
-  \fbox{\rule{0pt}{2in} \rule{0.9\linewidth}{0pt}}
-   %\includegraphics[width=0.8\linewidth]{egfigure.eps}
+  \caption{Comparison with SOTA.}
+  \begin{tabular}{cc|c|cccc}
+    \hline
+    \multicolumn{2}{c|}{\multirow{2}{*}{Method}} & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Clean\\ Acc.\end{tabular}} & \multicolumn{4}{c}{Certified Acc. at $\varepsilon$ (\%)} \\ \cline{4-7} 
+    \multicolumn{2}{c|}{}       &                                                                       & 0.25           & 0.5           & 0.75           & 1.0          \\ \hline
+    \multicolumn{2}{c|}{PixelDP  \citeyear{lecuyer2019certified} \cite{lecuyer2019certified}} & -  &  $ \prescript{(71.0)}{}{22.0}$   &   $ \prescript{(44.0)}{}{2.0}$     &    -    &   -      \\
+    \multicolumn{2}{c|}{Randomized Smoothing \citeyear{cohen2019certified} \cite{cohen2019certified}}  &  -  &  $ \prescript{(75.0)}{}{61.0}$   &   $ \prescript{(75.0)}{}{43.0}$     &    $ \prescript{(65.0)}{}{32.0}$    &   $ \prescript{(66.0)}{}{22.0}$      \\
+    \multicolumn{2}{c|}{SmoothAdv \citeyear{salman2019provably} \cite{salman2019provably}} &  -  &  $ \prescript{(84.3)}{}{74.9}$   &   $ \prescript{(80.1)}{}{63.4}$     &    $ \prescript{(80.1)}{}{51.9}$    &   $ \prescript{(62.2)}{}{39.6}$      \\
+    \multicolumn{2}{c|}{Consistency \citeyear{jeong2020consistency} \cite{jeong2020consistency}} &  -  &  $ \prescript{(77.8)}{}{68.8}$   &   $ \prescript{(75.8)}{}{58.1}$     &    $ \prescript{(72.9)}{}{48.5}$    &   $ \prescript{(52.3)}{}{37.8}$      \\
+    \multicolumn{2}{c|}{MACER \citeyear{zhai2020macer} \cite{zhai2020macer} }  & -   &  $ \prescript{(81.0)}{}{71.0}$   &   $ \prescript{(81.0)}{}{59.0}$     &    $ \prescript{(66.0)}{}{46.0}$    &   $ \prescript{(66.0)}{}{38.0}$      \\
+    \multicolumn{2}{c|}{Denoised \citeyear{salman2020denoised} \cite{salman2020denoised} }  & -   &  $ \prescript{(72.0)}{}{56.0}$   &   $ \prescript{(62.0)}{}{41.0}$     &    $ \prescript{(62.0)}{}{28.0}$    &   $ \prescript{(44.0)}{}{19.0}$      \\
+    \multicolumn{2}{c|}{Boosting \citeyear{horvath2021boosting} \cite{horvath2021boosting} }  & -   &  $ \prescript{(83.4)}{}{70.6}$   &   $ \prescript{(76.8)}{}{60.4}$     &    $ \prescript{(71.6)}{}{52.4}$    &   $ \prescript{(52.4)}{}{38.8}$      \\
+    \multicolumn{2}{c|}{DRT \citeyear{yang2021certified} \cite{yang2021certified} }  & -   &  $ \prescript{(81.5)}{}{70.4}$   &   $ \prescript{(72.6)}{}{60.2}$     &    $ \prescript{(71.9)}{}{50.5}$    &   $ \prescript{(56.1)}{}{39.8}$      \\
+    \multicolumn{2}{c|}{SmoothMix \citeyear{jeong2021smoothmix} \cite{jeong2021smoothmix} }  & -   &  $ \prescript{(77.1)}{}{67.9}$   &   $ \prescript{(77.1)}{}{57.9}$     &    $ \prescript{(74.2)}{}{47.7}$    &   $ \prescript{(61.8)}{}{37.2}$      \\
+    \multicolumn{2}{c|}{Lee \citeyear{lee2021provable} \cite{lee2021provable} }  & -   &  60.0   &   42.0     &    28.0    &   19.0      \\
+    \multicolumn{2}{c|}{ACES \citeyear{horvath2022robust} \cite{horvath2022robust} }  & -   &  $ \prescript{(79.0)}{}{69.0}$   &   $ \prescript{(74.2)}{}{57.2}$     &    $ \prescript{(74.2)}{}{47.0}$    &   $ \prescript{(58.6)}{}{37.8}$      \\ \hline
+    \multicolumn{2}{c|}{\textbf{Ours}}  & \textbf{97.7}  &  $ \prescript{(\textbf{89.3})}{}{\textbf{77.7}}$   &   $ \prescript{(89.3)}{}{62.3}$     &    $ \prescript{(89.3)}{}{46.3}$    &   $ \prescript{(76.4)}{}{31.4}$      \\ \hline
+ \end{tabular}
+\end{table*}
 
-   \caption{Example of caption.
-   It is set in Roman so that mathematics (always set in Roman: $B \sin A = A \sin B$) may be included without an ugly clash.}
-   \label{fig:onecol}
-\end{figure}
 
-\subsection{Miscellaneous}
 
-\noindent
-Compare the following:\\
-\begin{tabular}{ll}
- \verb'$conf_a$' &  $conf_a$ \\
- \verb'$\mathit{conf}_a$' & $\mathit{conf}_a$
-\end{tabular}\\
-See The \TeX book, p165.
+\begin{table*}[t]
+  \label{tab:cifar10}
+  \centering
+  \caption{Experiments on CIFAR10.}
+  \begin{tabular}{cc|c|cccc}
+    \hline
+    \multicolumn{2}{c|}{\multirow{2}{*}{Train}} & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Clean\\ Acc.\end{tabular}} & \multicolumn{4}{c}{Certified Acc. at $\varepsilon$ (\%)} \\ \cline{4-7} 
+    \multicolumn{2}{c|}{}       &                                                                       & 0.25           & 0.5           & 0.75           & 1.0          \\ \hline
+    \multicolumn{2}{c|}{Clean} & 87.5  &  $ \prescript{(10.5)}{}{10.5}$   &   $ \prescript{(10.5)}{}{10.1}$     &    $ \prescript{(10.5)}{}{9.7}$    &   $ \prescript{(10.5)}{}{5.5}$      \\
+    \multicolumn{2}{c|}{$\mathcal{N}$ 0.25}  &  71.8  &  $ \prescript{(74.2)}{}{59.3}$   &   $ \prescript{(74.2)}{}{41.7}$     &    $ \prescript{(74.2)}{}{26.0}$    &   $ \prescript{(46.0)}{}{6.7}$      \\
+    \multicolumn{2}{c|}{$\mathcal{N}$ 0.5} &  54.9  &  $ \prescript{(61.9)}{}{49.0}$   &   $ \prescript{(61.9)}{}{38.7}$     &    $ \prescript{(61.9)}{}{29.6}$    &   $ \prescript{(61.9)}{}{20.8}$      \\
+    \multicolumn{2}{c|}{$\mathcal{N}$ 1.0} &  41.1  &  $ \prescript{(45.0)}{}{39.1}$   &   $ \prescript{(45.0)}{}{30.0}$     &    $ \prescript{(45.0)}{}{24.8}$    &   $ \prescript{(40.9)}{}{19.8}$      \\
+    \multicolumn{2}{c|}{Mixed $\mathcal{N}$}  & 75.9   &  $ \prescript{(66.3)}{}{51.6}$   &   $ \prescript{(66.3)}{}{36.5}$     &    $ \prescript{(56.5)}{}{26.0}$    &   $ \prescript{(41.5)}{}{17.7}$      \\ \hline
+    \multirow{2}{*}{Pretrain}   & \multirow{2}{*}{Finetune}  & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Clean\\ Acc.\end{tabular}} & \multicolumn{4}{c}{Certified Acc. at $\varepsilon$ (\%)} \\ \cline{4-7} 
+                                &                            &                                                                       & 0.25           & 0.5           & 0.75           & 1.0          \\ \hline
+    Clean                       & Clean                      & 97.8  &  $ \prescript{(10.1)}{}{10.1}$   &   $ \prescript{(10.1)}{}{10.1}$     &    $ \prescript{(10.1)}{}{10.1}$    &   $ \prescript{(10.1)}{}{10.1}$      \\
+    $\mathcal{N}$ 0.25                     & $\mathcal{N}$ 0.25                    & 82.7  &  $ \prescript{(89.7)}{}{78.6}$   &   $ \prescript{(89.7)}{}{57.1}$     &    $ \prescript{(89.7)}{}{38.5}$    &   $ \prescript{(46.6)}{}{11.7}$      \\
+    $\mathcal{N}$ 0.5                      & $\mathcal{N}$ 0.5                     & 64.1  &  $ \prescript{(74.2)}{}{62.3}$   &   $ \prescript{(74.2)}{}{48.8}$     &    $ \prescript{(74.2)}{}{36.1}$    &   $ \prescript{(74.2)}{}{25.2}$      \\
+    $\mathcal{N}$ 1.0                      & $\mathcal{N}$ 1.0                     & 38.8  &  $ \prescript{(52.2)}{}{42.1}$   &   $ \prescript{(52.2)}{}{34.1}$     &    $ \prescript{(52.2)}{}{27.4}$    &   $ \prescript{(52.2)}{}{22.0
+    }$      \\
+    Mixed $\mathcal{N}$                    & Clean                      & 98.0  &  $ \prescript{(85.5)}{}{71.4}$   &   $ \prescript{(85.5)}{}{49.0}$     &    $ \prescript{(85.5)}{}{25.4}$    &   $ \prescript{(39.1)}{}{17.7}$      \\ \hline
+    Mixed $\mathcal{N}$ e400                    & Clean                      & 98.2  &  $ \prescript{(85.5)}{}{72.8}$   &   $ \prescript{(85.5)}{}{50.8}$     &    $ \prescript{(85.5)}{}{29.2}$    &   $ \prescript{(40.7)}{}{16.9}$      \\ \hline
+    Mixed $\mathcal{N}$ e400                    & Clean e400                      & 98.1  &  $ \prescript{(89.3)}{}{76.0}$   &   $ \prescript{(89.3)}{}{53.3}$     &    $ \prescript{(89.3)}{}{32.6}$    &   $ \prescript{(73.2)}{}{20.1}$      \\ \hline
+    Mixed $\mathcal{N}$ KL e400                  & Clean                      & 98.4  &  $ \prescript{(82.1)}{}{68.5}$   &   $ \prescript{(82.1)}{}{50.2}$     &    $ \prescript{(82.1)}{}{30.6}$    &   $ \prescript{(57.3)}{}{18.1}$      \\ \hline
+    Mixed $\mathcal{N}$                  & Clean e1                     & 96.8  &  $ \prescript{(81.3)}{}{66.7}$   &   $ \prescript{(81.3)}{}{45.0}$     &    $ \prescript{(81.3)}{}{27.2}$    &   $ \prescript{(60.9)}{}{16.9}$      \\ \hline
+    Clean   &  Mixed $\mathcal{N}$     & 96.9  &  $ \prescript{(70.4)}{}{55.8}$   &   $ \prescript{(58.3)}{}{38.7}$     &    $ \prescript{(58.3)}{}{27.6}$    &   $ \prescript{(58.3)}{}{17.3}$      \\ \hline
+    Mixed $\mathcal{N}$ e400   &  Mixed $\mathcal{N}$ e800    & 98.1  &  $ \prescript{(90.6)}{}{78.1}$   &   $ \prescript{(90.6)}{}{61.3}$     &    $ \prescript{(90.6)}{}{45.3}$    &   $ \prescript{(77.0)}{}{31.1}$      \\ \hline
+    Mixed $\mathcal{N}$ e400   &  Mixed $\mathcal{N}$ p1234 e400    & 98.0  &  $ \prescript{(90.4)}{}{78.5}$   &   $ \prescript{(90.4)}{}{62.1}$     &    $ \prescript{(90.4)}{}{44.1}$    &   $ \prescript{(77.3)}{}{32.0}$      \\ \hline
+    Mixed $\mathcal{N}$ e400   &  Mixed $\mathcal{N}$ p1234 e800    & 97.7  &  $ \prescript{(89.3)}{}{77.7}$   &   $ \prescript{(89.3)}{}{62.3}$     &    $ \prescript{(89.3)}{}{46.3}$    &   $ \prescript{(76.4)}{}{31.4}$      \\ \hline
+    Mixed $\mathcal{N}$ e400 s224   &  Mixed $\mathcal{N}$ e800 s224   & 98.1  &  $ \prescript{(90.4)}{}{79.5}$   &   $ \prescript{(90.4)}{}{62.7}$     &    $ \prescript{(90.4)}{}{43.2}$    &   $ \prescript{(77.7)}{}{31.8}$      \\ \hline
+    \end{tabular}
+\end{table*}
 
-The space after \eg, meaning ``for example'', should not be a sentence-ending space.
-So \eg is correct, {\em e.g.} is not.
-The provided \verb'\eg' macro takes care of this.
 
-When citing a multi-author paper, you may save space by using ``et alia'', shortened to ``\etal'' (not ``{\em et.\ al.}'' as ``{\em et}'' is a complete word).
-If you use the \verb'\etal' macro provided, then you need not worry about double periods when used at the end of a sentence as in Alpher \etal.
-However, use it only when there are three or more authors.
-Thus, the following is correct:
-   ``Frobnication has been trendy lately.
-   It was introduced by Alpher~\cite{Alpher02}, and subsequently developed by
-   Alpher and Fotheringham-Smythe~\cite{Alpher03}, and Alpher \etal~\cite{Alpher04}.''
 
-This is incorrect: ``... subsequently developed by Alpher \etal~\cite{Alpher03} ...'' because reference~\cite{Alpher03} has just two authors.
+\begin{table*}[t]
+  \label{tab:cifar100}
+  \centering
+  \caption{Experiments on CIFAR100.}
+  \begin{tabular}{cc|c|cccc}
+    \hline
+    \multicolumn{2}{c|}{\multirow{2}{*}{Train}} & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Clean\\ Acc.\end{tabular}} & \multicolumn{4}{c}{Certified Acc. at $\varepsilon$ (\%)} \\ \cline{4-7} 
+    \multicolumn{2}{c|}{}       &                                                                       & 0.25           & 0.5           & 0.75           & 1.0          \\ \hline
+    \multicolumn{2}{c|}{Clean}              & 63.7    & $ \prescript{(3.2)}{}{1.4}$      & $ \prescript{(3.2)}{}{0.8}$          & $ \prescript{(0.6)}{}{0.6}$  &    $ \prescript{(0.6)}{}{0.6}$         \\
+    \multicolumn{2}{c|}{$\mathcal{N}$ 0.25}  &  29.5  &  $ \prescript{(47.5)}{}{33.6}$   &   $ \prescript{(47.5)}{}{22.8}$     &    $ \prescript{(47.5)}{}{12.4}$    &   $ \prescript{(20.9)}{}{3.2}$      \\
+    \multicolumn{2}{c|}{$\mathcal{N}$ 0.5} &  22.3  &  $ \prescript{(36.0)}{}{27.5}$   &   $ \prescript{(36.0)}{}{22.1}$     &    $ \prescript{(36.0)}{}{15.8}$    &   $ \prescript{(36.0)}{}{11.5}$      \\
+    \multicolumn{2}{c|}{$\mathcal{N}$ 1.0} & 14.29  &  $ \prescript{(18.1)}{}{15.2}$   &   $ \prescript{(18.7)}{}{13.1}$     &    $ \prescript{(18.7)}{}{10.7}$    &   $ \prescript{(18.7)}{}{8.8}$      \\
+    \multicolumn{2}{c|}{Mixed $\mathcal{N}$}  & 50.78  &  $ \prescript{(42.6)}{}{31.6}$   &   $ \prescript{(42.6)}{}{21.0}$     &    $ \prescript{(33.2)}{}{13.9}$    &   $ \prescript{(33.2)}{}{10.8}$      \\ \hline
+    \multirow{2}{*}{Pretrain}   & \multirow{2}{*}{Finetune}  & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Clean\\ Acc.\end{tabular}} & \multicolumn{4}{c}{Certified Acc. at $\varepsilon$ (\%)} \\ \cline{4-7} 
+                                &                            &                                                                       & 0.25           & 0.5           & 0.75           & 1.0          \\ \hline
+    % Clean                       & Clean                      &   &  $ \prescript{()}{}{}$   &   $ \prescript{()}{}{}$     &    $ \prescript{()}{}{}$    &   $ \prescript{()}{}{}$      \\
+    % $\mathcal{N}$ 0.25                     & $\mathcal{N}$ 0.25                    &   &  $ \prescript{()}{}{}$   &   $ \prescript{()}{}{}$     &    $ \prescript{()}{}{}$    &   $ \prescript{()}{}{}$      \\
+    % $\mathcal{N}$ 0.5                      & $\mathcal{N}$ 0.5                     &   &  $ \prescript{()}{}{}$   &   $ \prescript{()}{}{}$     &    $ \prescript{()}{}{}$    &   $ \prescript{()}{}{}$      \\
+    % $\mathcal{N}$ 1.0                      & $\mathcal{N}$ 1.0                     &   &  $ \prescript{()}{}{}$   &   $ \prescript{()}{}{}$     &    $ \prescript{()}{}{}$    &   $ \prescript{()}{}{}$      \\
+    Mixed $\mathcal{N}$                    & Clean                      & 86.1  &  $ \prescript{(58.7)}{}{40.5}$   &   $ \prescript{(58.7)}{}{25.8}$     &    $ \prescript{(58.7)}{}{14.9}$    &   $ \prescript{(30.7)}{}{7.5}$      \\ \hline
+    \end{tabular}
+\end{table*}
+
+
+
+\begin{table*}[]
+  \label{tab:mixed_ablation}
+  \centering
+  \caption{Ablation study on mixed Noise.}
+  \begin{tabular}{cc|c|cccc}
+    \hline
+   \multirow{2}{*}{Pretrain}   & \multirow{2}{*}{Finetune}  & \multirow{2}{*}{\begin{tabular}[c]{@{}c@{}}Clean\\ Acc.\end{tabular}} & \multicolumn{4}{c}{Certified Acc. at $\varepsilon$ (\%)} \\ \cline{4-7} 
+                                &                            &                                                                       & 0.25           & 0.5           & 0.75           & 1.0          \\ \hline
+    \multirow{4}{*}{Clean}                 & Clean                & 97.8  &  $ \prescript{(10.1)}{}{10.1}$   &   $ \prescript{(10.1)}{}{10.1}$     &    $ \prescript{(10.1)}{}{10.1}$    &   $ \prescript{(10.1)}{}{10.1}$      \\
+                         & $\mathcal{N}$ 0.25                     & 77.6  &  $ \prescript{(83.7)}{}{69.4}$   &   $ \prescript{(83.7)}{}{53.0}$     &    $ \prescript{(83.7)}{}{34.1}$    &   $ \prescript{(50.6)}{}{10.9}$      \\
+                          & $\mathcal{N}$ 0.5                     & 63.4  &  $ \prescript{(64.7)}{}{54.2}$   &   $ \prescript{(64.7)}{}{39.1}$     &    $ \prescript{(64.7)}{}{28.6}$    &   $ \prescript{(64.7)}{}{19.8}$      \\
+                          & $\mathcal{N}$ 1.0                     & 39.3  &  $ \prescript{(42.5)}{}{35.7}$   &   $ \prescript{(42.5)}{}{30.2}$     &    $ \prescript{(42.5)}{}{23.4}$    &   $ \prescript{(42.5)}{}{19.4}$      \\ \hline
+
+    \multirow{4}{*}{$\mathcal{N}$ 0.25}              & Clean                      & 94.4  &  $ \prescript{(42.9)}{}{21.6}$   &   $ \prescript{(42.9)}{}{10.7}$     &    $ \prescript{(12.1)}{}{7.5}$    &   $ \prescript{(12.1)}{}{4.2}$      \\
+                                          & $\mathcal{N}$ 0.25                    & 82.7  &  $ \prescript{(89.7)}{}{78.6}$   &   $ \prescript{(89.7)}{}{57.1}$     &    $ \prescript{(89.7)}{}{38.5}$    &   $ \prescript{(58.3)}{}{11.7}$      \\
+                                          & $\mathcal{N}$ 0.5                     & 64.7  &  $ \prescript{(76.0)}{}{65.7}$   &   $ \prescript{(76.0)}{}{51.0}$     &    $ \prescript{(76.0)}{}{38.5}$    &   $ \prescript{(76.0)}{}{25.8}$      \\
+                                          & $\mathcal{N}$ 1.0                     & 54.3  &  $ \prescript{(63.1)}{}{52.6}$   &   $ \prescript{(61.1)}{}{43.5}$     &    $ \prescript{(61.1)}{}{31.5}$    &   $ \prescript{(61.1)}{}{23.4}$      \\ \hline
+
+    \multirow{5}{*}{Mixed $\mathcal{N}$}              & Clean                      & 98.0  &  $ \prescript{(85.5)}{}{71.4}$   &   $ \prescript{(85.5)}{}{49.0}$     &    $ \prescript{(85.5)}{}{25.4}$    &   $ \prescript{(39.1)}{}{17.7}$      \\
+                                          & $\mathcal{N}$ 0.25                    & 96.4  &  $ \prescript{(90.5)}{}{78.8}$   &   $ \prescript{(90.5)}{}{58.1}$     &    $ \prescript{(90.5)}{}{37.1}$    &   $ \prescript{(71.6)}{}{17.5}$      \\
+                                          & $\mathcal{N}$ 0.5                     & 94.6  &  $ \prescript{(86.9)}{}{73.8}$   &   $ \prescript{(86.9)}{}{57.9}$     &    $ \prescript{(76.6)}{}{37.9}$    &   $ \prescript{(76.6)}{}{26.6}$      \\
+                                          & $\mathcal{N}$ 1.0                     & 93.7  &  $ \prescript{(82.7)}{}{69.6}$   &   $ \prescript{(82.7)}{}{55.6}$     &    $ \prescript{(82.7)}{}{35.3}$    &   $ \prescript{(67.9)}{}{26.0}$      \\ 
+                                          & Mixed $\mathcal{N}$                     & 97.9  &  $ \prescript{(88.7)}{}{77.6}$   &   $ \prescript{(88.7)}{}{57.5}$     &    $ \prescript{(88.7)}{}{36.7}$    &   $ \prescript{(72.6)}{}{23.8}$      \\ \hline
+
+ 
+  \end{tabular}
+\end{table*}
+
+% \begin{table}[]
+%   \label{tab:mixed_ablation}
+%   \centering
+%   \caption{Ablation study on mixed Noise.}
+%   \begin{tabular}{cccccc}
+%   \hline
+%   \multirow{2}{*}{Pretrain}                                                             & \multirow{2}{*}{Finetune} & \multicolumn{4}{c}{Test Acc.}              \\ \cline{3-6} 
+%                                                                                             &                             & Clean & N. 0.25 & N. 0.5 & N. 1.0 \\ \hline
+%   \multirow{4}{*}{Clean}                                                                   & Clean                       &       &            &           &           \\
+%                                                                                             & N. 0.25                  &       &            &           &           \\
+%                                                                                             & N. 0.5                   &       &            &           &           \\
+%                                                                                             & N. 1.0                   &       &            &           &           \\ \hline
+%   \multirow{4}{*}{N. 0.25}                                                              & Clean                       &       &            &           &           \\
+%                                                                                             & N. 0.25                  &       &            &           &           \\
+%                                                                                             & N. 0.5                   &       &            &           &           \\
+%                                                                                             & N. 1.0                   &       &            &           &           \\ \hline
+%   \multirow{4}{*}{\begin{tabular}[c]{@{}c@{}}Mixed N.\\  (0, 0.25)\end{tabular}}        & Clean                       &       &            &           &           \\
+%                                                                                             & N. 0.25                  &       &            &           &           \\
+%                                                                                             & N. 0.5                   &       &            &           &           \\
+%                                                                                             & N. 1.0                   &       &            &           &           \\ \hline
+%   \multirow{5}{*}{\begin{tabular}[c]{@{}c@{}}Mixed N.\\ (0, 0.25, \\ 0.5,1.0)\end{tabular}} & Clean                       &       &            &           &           \\
+%                                                                                             & N. 0.25                  &       &            &           &           \\
+%                                                                                             & N. 0.5                   &       &            &           &           \\
+%                                                                                             & N. 1.0                   &       &            &           &           \\
+%                                                                                             & Mixed N.                 &       &            &           &           \\ \hline
+%   \end{tabular}
+% \end{table}
+
+
+\newpage
+\null
+\newpage
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+% \begin{table}[]
+%   \label{tab:unsupervised}
+%   \centering
+%   \caption{Experiments on unsupervised pretraining.}
+%   \begin{tabular}{cccccc}
+%   \hline
+%   \multicolumn{2}{c}{\multirow{2}{*}{Train from Scratch}}                                        & \multicolumn{4}{c}{Test Acc.}              \\ \cline{3-6} 
+%   \multicolumn{2}{c}{}                                               & Clean & N. 0.25 & N. 0.5 & N. 1.0 \\ \hline
+%   \multicolumn{2}{c}{Clean}                                                                      &       &            &           &           \\
+%   \multicolumn{2}{c}{N. 0.25}                                                                 &       &            &           &           \\
+%   \multicolumn{2}{c}{N. 0.5}                                                                  &       &            &           &           \\
+%   \multicolumn{2}{c}{N. 1.0}                                                                  &       &            &           &           \\
+%   \multicolumn{2}{c}{Mixed N.}                                                                &       &            &           &           \\ \hline
+%   \multirow{2}{*}{Pretrain}                                          & \multirow{2}{*}{Finetune} & \multicolumn{4}{c}{Test Acc}               \\ \cline{3-6} 
+%                                                                      &                           & Clean & N. 0.25 & N. 0.5 & N. 1.0 \\ \hline
+%   \begin{tabular}[c]{@{}c@{}}Mixed N.\\ Supervised\end{tabular}   & Clean                     &       &            &           &           \\ \hline
+%   \begin{tabular}[c]{@{}c@{}}Mixed N.\\ Unsupervised\end{tabular} & Clean                     &       &            &           &           \\ \hline
+%   \end{tabular}
+% \end{table}
+
+
+% Please add the following required packages to your document preamble:
+% \usepackage{multirow}
+% \begin{table*}[]
+%   \label{tab:downstream}
+%   \centering
+%   \caption{Experiments on downstream datasets.}
+%   \begin{tabular}{cl|cccc|llll}
+%   \hline
+%   \multicolumn{2}{c|}{\multirow{2}{*}{Train from Scratch}} & \multicolumn{4}{c|}{CalTech101 Test Acc.}                                                     & \multicolumn{4}{c}{CalTech256 Test Acc.}                                                                                     \\ \cline{3-10} 
+%   \multicolumn{2}{c|}{}                 & Clean                & N. 0.25           & N. 0.5            & N. 1.0             & \multicolumn{1}{c}{Clean} & \multicolumn{1}{c}{N. 0.25} & \multicolumn{1}{c}{N. 0.5} & \multicolumn{1}{c}{N. 1.0} \\ \hline
+%   \multicolumn{2}{c|}{Clean}                               &                      &                      &                      &                       &                           &                                &                               &                               \\
+%   \multicolumn{2}{c|}{N. 0.25}                          &                      &                      &                      &                       &                           &                                &                               &                               \\
+%   \multicolumn{2}{c|}{N. 0.5}                           &                      &                      &                      &                       &                           &                                &                               &                               \\
+%   \multicolumn{2}{c|}{N. 1.0}                           &                      &                      &                      &                       &                           &                                &                               &                               \\ \hline
+%   \multicolumn{2}{l|}{Mixed N. Transfer}                & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l}{} & \multicolumn{1}{l|}{} &                           &                                &                               &                               \\ \hline
+%   \end{tabular}
+% \end{table*}
+
+
+\newpage
+\null
+\newpage
+\null
 
 \begin{figure*}
   \centering
-  \begin{subfigure}{0.68\linewidth}
-    \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
-    \caption{An example of a subfigure.}
-    \label{fig:short-a}
+  \begin{subfigure}{0.45\linewidth}
+    \includegraphics[width=1.0\textwidth]{sec/fig/CIFAR10_curve.pdf}   
+    % \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
+    \caption{CIFAR10 Experiments.}
+    \label{fig:cifar10 exp}
   \end{subfigure}
   \hfill
-  \begin{subfigure}{0.28\linewidth}
-    \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
-    \caption{Another example of a subfigure.}
-    \label{fig:short-b}
+  \begin{subfigure}{0.45\linewidth}
+    \includegraphics[width=1.0\textwidth]{sec/fig/CIFAR100_curve.pdf}   
+    % \fbox{\rule{0pt}{2in} \rule{.9\linewidth}{0pt}}
+    \caption{CIFAR100 Experiments.}
+    \label{fig:cifar100 exp}
   \end{subfigure}
-  \caption{Example of a short caption, which should be centered.}
-  \label{fig:short}
+  \caption{Vis.}
+  \label{fig:vis}
 \end{figure*}
+
+
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+
+
+

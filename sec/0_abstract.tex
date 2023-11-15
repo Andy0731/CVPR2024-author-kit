@@ -1,4 +1,8 @@
 \begin{abstract}
+
+\iffalse
+
+	V0
 	Randomized smoothing has emerged as a prevalent method for certified robustness. In this paper, we extend further into the transferability of randomized smoothing. 
 	We introduce a simple yet effective pipeline that empowers pretrained robust models to defend against attacks on downstream tasks, requiring solely the fine-tuning on the clean datasets derived from these tasks. 
 	Our approach relies on two key techniques.
@@ -7,4 +11,44 @@
 	We provide a detailed investigation into the functioning mechanisms of these two critical techniques. 
 	Our proposed transfer method can be broadly applied to multiple downstream tasks.
     By merely fine-tuning on clean images, we have achieved impressive accuracy and robustness across 12 downstream tasks.
+
+
+	V2
+
+	Randomized smoothing has emerged as a prevalent method to achieve certified robustness for machine learning models.
+	Recent advancements in randomized smoothing have utilized the pretrain and finetune strategy, yielding impressive outcomes.
+	However, these methods often struggle to simultaneously achieve high natural and robust accuracy in downstream tasks, necessitating a trade-off between the two.
+	In this paper, we investigate the challenges associated with semantic and robustness transfer.
+	Our goal is to not only transfer the semantic representation but also inherit robustness into downstream tasks.
+	Achieving this necessitates two main aspects.
+	First, it's important to learn both robust and semantically rich representations concurrently during the pretraining phase.
+	Second, the distribution gap between upstream and downstream tasks should be minimized to facilitate a smooth transition.
+	To this end, we propose a novel pretrain and finetune pipeline that achieves both high natural and robust accuracy in downstream tasks.
+	Specifically, during the pretrain phase, we mix clean images with a variety of noisy images for training.
+	During the finetune phase, we ensure that the noise intensity overlaps with the pretrain phase.
+
+
+V3
+
+Training foundation models on extensive datasets and subsequently fine-tuning them on specific tasks has emerged as the mainstream approach in artificial intelligence.
+Yet, the current foundation models are not sufficiently robust.
+We aim to develop a certified robust foundation model that can be readily fine-tuned for particular task adaptation.
+A key challenge is dealing with the compromise between semantic learning and robustness.
+We propose a simple yet highly effective strategy.
+In particular, we pre-train on a mixture of clean and various noisy images.
+This strategy significantly broadens the data distribution, which is extremely beneficial for  fine-tuning in downstream tasks.
+Surprisingly, even when fine-tuned only on clean images from downstream tasks, we can still achieve strong certified accuracy.
+Furthermore, this strategy only requires training a single model to deal with various noises, instead of training multiple models. This significantly reduces computational costs.
+Despite using just one model, we were still able to achieve results that are on par with, or even surpass, those from previous works that used multiple models.
+
+\fi
+
+Version 4
+
+Training foundation models on extensive datasets and then finetuning them on specific tasks has emerged as the mainstream approach in artificial intelligence. 
+%These models, however, are not guaranteed to be adversarially robust. 
+\zhirong{The model robustness, which is a critical aspect for safety, is often optimized at each specific task rather than at the pretraining stage. }
+In this paper, we propose a method for pretraining certifiably robust models that can be readily finetuned for adaptation to a particular task. A key challenge is dealing with the compromise between semantic learning and robustness. We address this with a simple yet highly effective strategy based on significantly broadening the pretraining data distribution, which is shown to greatly benefit finetuning for downstream tasks. Through pretraining on a mixture of clean and various noisy images, we find that surprisingly strong certified accuracy can be achieved even when finetuning on only clean images. Furthermore, this strategy requires just a single model to deal with various noise levels, thus substantially reducing computational costs in relation to previous works that employ multiple models. Despite using just one model, our method can still yield results that are on par with, or even superior to, existing multi-model methods.
+
+
 \end{abstract}
